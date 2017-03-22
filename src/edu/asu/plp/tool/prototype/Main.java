@@ -48,6 +48,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.TextInputDialog;
 import javafx.scene.input.ContextMenuEvent;
 import javafx.scene.input.MouseButton;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
@@ -350,19 +351,91 @@ public class Main extends Application implements Controller
 		List<QuickViewSection> mips = new ArrayList<>();
 		
 		QuickViewSection instructionsRType = new QuickViewSection("R-Type Instruction");
-		instructionsRType.addEntry("","");
+		instructionsRType.addEntry("add $rd, $rs, $rt" , "rd = rs + rt (Overflow Trap)");
+		instructionsRType.addEntry("addu $rd, $rs, $rt", "rd = rs + rt");
+		instructionsRType.addEntry("and $rd, $rs, $rt",	"rd = rs & rt");
+		instructionsRType.addEntry("div $rd, $rs, $rt", "$LO = rs / rt; $HI = rs % rt");
+		instructionsRType.addEntry("divu $rd, $rs, $rt", "$LO = rs / rt; $HI = rs % rt(Unsigned)");
+		instructionsRType.addEntry("jr $rs", "PC = rs");
+		instructionsRType.addEntry("mfhi $rd", "rd = $HI");
+		instructionsRType.addEntry("mflo $rd", "rd = $LO");
+		instructionsRType.addEntry("mult $rs, $rt", "rs * rt = $LO ");
+		instructionsRType.addEntry("multu $rs, $rt", "rs * rt = $LO (Unsigned)");
+		instructionsRType.addEntry("nor $rd, $rs, $rt", "rd = !(rs | rt)");
+		instructionsRType.addEntry("xor $rd, $rs, $rt", "rd = rs ⊕ rt");
+		instructionsRType.addEntry("or $rd, $rs, $rt", "rd = rs | rt");
+		instructionsRType.addEntry("slt $rd, $rs, $rt", "if (rs < rt) rd = 1 : rd = 0");
+		instructionsRType.addEntry("sltu $rd, $rs, $rt", "if (rs < rt) rd = 1 : rd = 0 (Unisgned)");
+		instructionsRType.addEntry("sll $rd, $rt, Imm", "rd = rt << Imm");
+		instructionsRType.addEntry("srl $rd, $rt, Imm", "rd = rt >> Imm");
+		instructionsRType.addEntry("sra $rd, $rt, Imm", "rd = rt >> Imm (SignBit shifted in)");
+		instructionsRType.addEntry("sub $rd, $rs, $rt", "rd = rs - rt");
+		instructionsRType.addEntry("subu $rd, $rs, $rt", "rd = rs - rt (Unsigned)");
+		
+		/*instructionsRType.addEntry("", "");
+		instructionsRType.addEntry("", "");*/
+		
 		
 		QuickViewSection instructionsIType = new QuickViewSection("I-Type Instructions");
-		instructionsIType.addEntry("","");
+		instructionsIType.addEntry("addi $rt, $rs, imm","rt = rs + imm");
+		instructionsIType.addEntry("addiu $rt, $rs, imm", "rt = rs + SignExtend(imm)");
+		instructionsIType.addEntry("andi $rt, $rs, imm", "rt = rs & ZeroExtend(imm)");
+		instructionsIType.addEntry("beq $rs, $rt, label", "if(rs == rt) PC = Label : PC += 4");
+		instructionsIType.addEntry("bne $rs, $rt, label", "if(rs != rt) PC = Label : PC += 4");
+		instructionsIType.addEntry("blez $rs, label", "if(rs <= 0) PC = label : PC += 4");
+		instructionsIType.addEntry("bgez $rs, label", "if(rs >= 0) PC = label : PC += 4");
+		instructionsIType.addEntry("beqz $rs, label", "if(rs == 0) PC = label : PC += 4");
+		instructionsIType.addEntry("bltz $rs, label", "if(rs < 0) PC = label : PC += 4");
+		instructionsIType.addEntry("bgtz $rs, label", "if(rs > 0) PC = label : PC += 4");
+		instructionsIType.addEntry("bnez $rs, label", "if(rs != 0) PC = label : PC += 4");
+		instructionsIType.addEntry("lbu $rt, offset($rs) ", "rt = MEM_8[rs + offset] (Unsigned)");
+		instructionsIType.addEntry("lhu $rt, offset($rs)", "rt = MEM_16[rs + offset] (Unisgned)");
+		instructionsIType.addEntry("lui $rt, imm", "rt = imm[31:16]");
+		instructionsIType.addEntry("lw $rt, offset($rs)", "rt = MEM_32[rs + offset]");
+		instructionsIType.addEntry("ori $rt, $rs, imm", "rt = rs | ZeroExtend(imm)");
+		instructionsIType.addEntry("sb $rt, offset($rs)", "MEM[rs + offset] = (0xff rt");
+		instructionsIType.addEntry("slti $rt, $rs, imm", "if (rs < Imm) rt = 1 : rt = 0");
+		instructionsIType.addEntry("sltiu $rt, $rs, imm", "if (rs < Unsigned imm) rt = 1 : rt = 0");
+		instructionsIType.addEntry("sw $rs, offset($rt)", "rt[offset] = rs");
+		
 		
 		QuickViewSection instructionsJType = new QuickViewSection("J-Type Instruction");
-		instructionsJType.addEntry("","");
+		instructionsJType.addEntry("j label","PC = label");
+		instructionsJType.addEntry("jal label","ra = PC += 8; PC = label");
+		
+		/*
+		 *TODO: Find remaining MIPS pseudo-instructions 
+		 */
 		
 		QuickViewSection instructionsPsuedo = new QuickViewSection("Pseudo-Operations");
-		instructionsPsuedo.addEntry("","");
+		instructionsPsuedo.addEntry("move $rt, $rs", " add $rt, $rs, $0");
+		instructionsPsuedo.addEntry("li $rs, imm", "lui $rt, imm[31:16]; ori $rd, $rd, imm[15:0]");
+		instructionsPsuedo.addEntry("la $rs, addr", "lui $rt, addr[31:16]; ori $rd, $rd, addr[15:0]");
+		
+		
 		
 		QuickViewSection directives = new QuickViewSection("Assembler Directive");
-		directives.addEntry("","");
+		directives.addEntry(".align n ", "align next datum on a 2^n byte boundary");
+		directives.addEntry(".ascii \"string\"", "Store a string in memory");
+		directives.addEntry(".asciiz \"string\"", "Store null-terminated string in memory");
+		directives.addEntry(".byte b1,...,bn", "Store values b1 through bn in successive bytes of memory");
+		directives.addEntry(".data <address>", "store data items in data segment. If optional <address> is present,"
+				+ " items are stored at beginning of <address>");
+		directives.addEntry(".double d1,...,dn", "Store double values d1 through dn in successive memory locations");
+		directives.addEntry(".extern sym size", "declare datum sotred in sym is size "
+				+ "bytes larger and is global. Accessed via register $gp");
+		directives.addEntry(".float f1,...,fn","Store floating point values f1 through fn in successive memory locations");
+		directives.addEntry(".globl sym", "declare that symbol sym is global and can be referenced from other files");
+		directives.addEntry(".half h1,...,hn", "Store 16-bit values h1 through hn in successive memory locations");
+		directives.addEntry(".kdata <address>" , "store the data in the kernal data segment."
+				+ " Optional <address> to start storage at beginning of <address>");
+		directives.addEntry(".ktext <address>","Store the data in the kernel text segment."
+				+ " Optional <address> to start storage at beginning of <address>");
+		directives.addEntry(".space n","Allocate n bytes of space in currecnt data segment");
+		directives.addEntry(".text <address>","Store items in user text segment."
+				+ " Optional <address> to start storage at beginning of <address>");
+		directives.addEntry(".word wq,...,wn","Store 32-bit words w1 through wn in successive memory ");
+		
 		
 		QuickViewSection registers = new QuickViewSection("Register Usage Guide");
 		registers.addEntry("$0, zero", "Hard-wired to 0");
@@ -408,10 +481,13 @@ public class Main extends Application implements Controller
 		fileChooser.setTitle("Open Resource File");
 		
 		String plp6Extension = "*" + PLPProject.FILE_EXTENSION;
+		String mipsExtension = "*" + MIPSProject.FILE_EXTENSION;
+		// Add new types here(or scrap them all in favor of a one, true type)
 		fileChooser.getExtensionFilters().addAll(
+				new ExtensionFilter("All Project Files", "*.plp", plp6Extension, mipsExtension),
 				new ExtensionFilter("PLP6 Project Files", plp6Extension),
-				new ExtensionFilter("Legacy Project Files", "*.plp"),
-				new ExtensionFilter("All PLP Project Files", "*.plp", plp6Extension),
+				new ExtensionFilter("MIPS Project Files", mipsExtension),
+				new ExtensionFilter("PLP Legacy Project Files", "*.plp"),
 				new ExtensionFilter("All Files", "*.*"));
 		
 		return fileChooser.showOpenDialog(stage);
@@ -625,6 +701,12 @@ public class Main extends Application implements Controller
 		// Activate the specified tab
 		openProjectsPanel.getSelectionModel().select(tab);
 	}
+
+	/*private void printFile(ASMFile file)
+	{
+		
+		System.out.println("selected file: " + file.getName());
+	}*/
 	
 	@Override
 	public void editCopy()
@@ -889,10 +971,13 @@ public class Main extends Application implements Controller
 	 */
 	private ProjectExplorerTree createProjectTree()
 	{
+		
+		
 		projects = FXCollections.observableArrayList();
 		ProjectExplorerTree projectExplorer = new ProjectExplorerTree(projects);
 		
 		projectExplorer.setOnFileDoubleClicked(this::openFile);
+		
 		
 		return projectExplorer;
 	}
@@ -1697,11 +1782,34 @@ public class Main extends Application implements Controller
 	public void showQuickReference()
 	{
 		Stage stage = new Stage();
+		Scene scene = null;
 		
 		// TODO: remove hard-coded numbers. Where did these even come from?
 		// TODO account for different quick references, such as MIPs, x86, etc
-		Scene scene = new Scene(plpQuickRef(), 888, 500);
-		stage.setTitle("Quick Reference");
+		
+		Pair selection = projectExplorer.getActiveSelection(); 				//returns a long string of the entire classpath
+																			//starting at edu.asu.plp.....
+		if(selection == null)
+		{
+			console.println("NO PROJECT TYPE DETECTED, PLEASE SELECT A PROJECT OR ASMFILE");
+			return;
+		}
+		
+		String selectionStr = selection.toString();
+		String projectType = selectionStr.split("\\.")[6];					//Index 6 is where the actual project type is specified
+		
+		
+		if(projectType.charAt(0) == 'P')
+		{
+			scene = new Scene(plpQuickRef(), 888, 500);
+			stage.setTitle("PLP_XX Quick Reference"); //TODO: place version number here
+		}
+		else if(projectType.charAt(0) == 'M')
+		{
+			scene = new Scene(mipsQuickRef(), 900, 500);
+			stage.setTitle("MIPS32 Quick Reference");
+		}
+		
 		stage.setScene(scene);
 		stage.show();
 	}
@@ -1833,5 +1941,4 @@ public class Main extends Application implements Controller
 			tryAndReport(project::save);
 		}
 	}
-
 }

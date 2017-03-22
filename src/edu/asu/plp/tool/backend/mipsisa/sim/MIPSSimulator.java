@@ -402,6 +402,29 @@ public class MIPSSimulator implements Simulator
 					//regFile.write(rd, pcplus4 + 4, false);
 				}
 			}
+			else if (funct == 0x12 || funct == 0x10 || funct == 0x11 || funct == 0x13) //mflo, mfhi, mtlo, mthi
+			{
+				boolean lo = true;
+				boolean hi = false;
+				boolean from  = true;
+				boolean to = false;
+				if (funct == 0x12) {
+					regFile.write(rd, lo, from);
+				} else if (funct == 0x10) {
+					regFile.write(rd, hi, from);
+				} else if (funct == 0x13) {
+					regFile.write(rd, lo, to);
+				} else {
+					regFile.write(rd, hi, to);					
+				}
+			}
+			else if (funct == 0x19 || funct == 0x1B) //multu, divu
+			{
+				alu_result = alu.evaluate(s, t, instruction);
+				long loResult = alu_result & 0xffffffffL;
+				long hiResult = (alu_result & 0xffffffff00000000L) >> 32;
+				regFile.write(loResult, hiResult);
+			}
 			else
 			{
 				alu_result = alu.evaluate(s, t, instruction);
@@ -469,12 +492,17 @@ public class MIPSSimulator implements Simulator
 				regFile.write(31,  (int)pcplus4 + 4, false);
 			}
 		}
-		else if(opcode == 0x0C || opcode == 0x0D) //ori, andi
+		else if(opcode == 0x0C || opcode == 0x0D || opcode == 0x0E) //ori, andi, xori
 		{
 			alu_result = alu.evaluate(s, imm, instruction) & 0xffffffffL;
 			//TODO memory write
 			//regFile.write(rt, alu_result, false);
 			regFile.write(rt, alu_result, false);
+		}
+		else if(opcode == 0x1c) //clz, clo
+		{
+			alu_result = alu.evaluate(s, 0, instruction);
+			regFile.write(rd, alu_result);
 		}
 		else
 		{

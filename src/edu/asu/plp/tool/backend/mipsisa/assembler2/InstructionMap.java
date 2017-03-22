@@ -8,9 +8,12 @@ import edu.asu.plp.tool.backend.mipsisa.assembler2.instructions.RITypeInstructio
 import edu.asu.plp.tool.backend.mipsisa.assembler2.instructions.RIUTypeInstruction;
 import edu.asu.plp.tool.backend.mipsisa.assembler2.instructions.RJTypeInstruction;
 import edu.asu.plp.tool.backend.mipsisa.assembler2.instructions.RLTypeInstruction;
+import edu.asu.plp.tool.backend.mipsisa.assembler2.instructions.RMTypeInstruction;
 import edu.asu.plp.tool.backend.mipsisa.assembler2.instructions.RTypeInstruction;
+import edu.asu.plp.tool.backend.mipsisa.assembler2.instructions.AccRTypeInstruction;
 import edu.asu.plp.tool.backend.mipsisa.assembler2.instructions.BTypeInstruction;
 import edu.asu.plp.tool.backend.mipsisa.assembler2.instructions.JTypeInstruction;
+import edu.asu.plp.tool.backend.mipsisa.assembler2.instructions.RCTypeInstruction;
 
 public class InstructionMap extends HashMap<String, MIPSInstruction>
 {
@@ -29,6 +32,18 @@ public class InstructionMap extends HashMap<String, MIPSInstruction>
 	public void addRJTypeInstruction(String name, int functCode)
 	{
 		RJTypeInstruction instruction = new RJTypeInstruction(functCode);
+		this.put(name, instruction);
+	}
+	
+	public void addAccRTypeInstruction(String name, int functCode)
+	{
+		AccRTypeInstruction instruction = new AccRTypeInstruction(functCode);
+		this.put(name, instruction);
+	}
+	
+	public void addRMTypeInstruction(String name, int functCode)
+	{
+		RMTypeInstruction instruction = new RMTypeInstruction(functCode);
 		this.put(name, instruction);
 	}
 	
@@ -62,6 +77,12 @@ public class InstructionMap extends HashMap<String, MIPSInstruction>
 		this.put(name, instruction);
 	}
 	
+	public void addRCTypeInstruction(String name, int opCode, int functCode)
+	{
+		RCTypeInstruction instruction = new RCTypeInstruction(opCode, functCode);
+		this.put(name, instruction);
+	}
+	
 	public void addJRRTypeInstruction(String name, int opCode)
 	{
 		JRRTypeInstruction instruction = new JRRTypeInstruction(opCode);
@@ -79,7 +100,7 @@ public class InstructionMap extends HashMap<String, MIPSInstruction>
 	{
 		if (this.containsKey(name))
 		{
-			String message = "PLPInstructionMap cannot contain multiple instructions "
+			String message = "MIPSInstructionMap cannot contain multiple instructions "
 					+ "with the same name (" + name + ")";
 			throw new IllegalArgumentException(message);
 		}

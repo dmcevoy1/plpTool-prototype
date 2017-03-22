@@ -18,7 +18,9 @@ public class ALU
 				{
 					case 0x24: return a & b;
 					case 0x25: return a | b;
+					case 0x26: return a ^ b;
 					case 0x27: return ~(a | b);
+					case 0x20: //OVERFLOW HERE if a+b overflows
 					case 0x21: return a + b;
 					case 0x23: return a - b;
 					case 0x2A:
@@ -36,11 +38,17 @@ public class ALU
 						return (((long)(int) a * (long)(int)b) & 0xffffffff00000000L) >> 32;
 					case 0x01: return a << b;
                     case 0x03: return a >> b;
+					case 0x19: return a * b;
+					case 0x1B: 
+						long value = a % b;
+						value = value << 32;
+						return (value & 0xffffffff00000000L) | (a / b & 0x00000000ffffffffL);
 				}
 			case 0x04: return (a - b == 0) ? 1 : 0;
             case 0x05: return (a - b == 0) ? 0 : 1;
             case 0x0c: return a & b;
             case 0x0d: return a | b;
+            case 0x0e: return a ^ b;
             case 0x0f: return b << 16;
             case 0x0A:
                 int aSigned = (int) a;
@@ -51,6 +59,26 @@ public class ALU
             case 0x09:
             case 0x23:
             case 0x2B: return a + b;
+            case 0x1C:
+            	switch (InstructionExtractor.funct(instruction)) {
+            		case 0x20:
+            			int n = 0;
+            		    if (a <= 0x0000ffff) { n += 16; a <<= 16; }
+            		    if (a <= 0x00ffffff) { n +=  8; a <<= 8; }
+            		    if (a <= 0x0fffffff) { n +=  4; a <<= 4; }
+            		    if (a <= 0x3fffffff) { n +=  2; a <<= 2; }
+            		    if (a <= 0x7fffffff) n ++;
+            		    return n;
+            		case 0x21:
+            			int n1 = 0;
+            			
+            			if (a >= 0xffff0000) { n1 += 16; a >>= 16; }
+            			if (a >= 0xff000000) { n1 +=  8; a >>= 8; }
+            		    if (a >= 0xf0000000) { n1 +=  4; a >>= 4; }
+            		    if (a >= 0x70000000) { n1 +=  2; a >>= 2; }
+            		    if (a >= 0x30000000) n1 ++;
+            		    return n1;
+            	}
 		}
 		//@formatter:on
 		return -1;
