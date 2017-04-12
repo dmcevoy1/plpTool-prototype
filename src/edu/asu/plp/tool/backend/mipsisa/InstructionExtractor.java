@@ -121,7 +121,7 @@ public class InstructionExtractor
 		switch (instrType)
 		{
 			case 0:
-			case 8:
+			//case 8:
 				ret += "$" + rd(instruction) + ", $" + rs(instruction) + ", $" + rt(instruction);
 				break;
 			case 1:
@@ -151,6 +151,11 @@ public class InstructionExtractor
 			case 9:
 				ret += "$" + rd(instruction) + ", $" + rs(instruction);
 				break;
+			case 8:
+				ret += "$" + rt(instruction) + ", $" + rs(instruction) + "," + rd(instruction) + "," + sa(instruction);
+				break;
+			case 10:
+				ret += "$" + rs(instruction) + ", 0x" + String.format("%x", imm(instruction));
 		}
 		
 		return ret;

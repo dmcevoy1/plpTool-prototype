@@ -42,9 +42,6 @@ public class RCTypeInstruction extends AbstractInstruction
 	
 	private int assembleEncodings(int encodedRSArgument, int encodedRDArgument)
 	{
-		
-		//Argument loRegisterArgument = new RegisterArgument("$LO");
-		
 		int encodedBitString = 0;
 		encodedBitString |= (opCode & MASK_6BIT) << OP_CODE_POSITION;
 		encodedBitString |= (encodedRSArgument & MASK_5BIT) << RS_POSITION;

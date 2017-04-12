@@ -6,15 +6,14 @@ import java.text.ParseException;
 
 import edu.asu.plp.tool.backend.mipsisa.assembler2.Argument;
 import edu.asu.plp.tool.backend.mipsisa.assembler2.arguments.ArgumentType;
-import edu.asu.plp.tool.backend.mipsisa.assembler2.arguments.RegisterArgument;
 
-public class AccRTypeInstruction extends AbstractInstruction
+public class RVTypeInstruction extends AbstractInstruction
 {
-	//multu $rs, $rt
+	//srlv
+	//rotrv
 	
 	public static final int MASK_5BIT = 0b011111;
 	public static final int MASK_6BIT = 0b111111;
-	public static final int OP_CODE_POSITION = 26;
 	public static final int RS_POSITION = 21;
 	public static final int RT_POSITION = 16;
 	public static final int RD_POSITION = 11;
@@ -22,33 +21,34 @@ public class AccRTypeInstruction extends AbstractInstruction
 	public static final int FUNCT_CODE_POSITION = 0;
 	
 	private int functCode;
-	private int opcode;
+	private int rValue;
 	
-	public AccRTypeInstruction(int opcode, int functCode)
+	public RVTypeInstruction(int functCode, int r_value)
 	{
-		super(new ArgumentType[] { REGISTER, REGISTER });
+		super(new ArgumentType[] { REGISTER, REGISTER, REGISTER });
 		this.functCode = functCode;
-		this.opcode = opcode;
+		this.rValue = r_value;
 	}
 	
 	@Override
 	protected int safeAssemble(Argument[] arguments)
 	{
-		Argument rsRegisterArgument = arguments[0];
-		Argument rtRegisterArgument = arguments[1];
+		Argument rdRegisterArgument = arguments[0];
+		Argument rsRegisterArgument = arguments[1];
+		Argument rtRegisterArgument = arguments[2];
 		
-		return assembleEncodings(rsRegisterArgument.encode(), rtRegisterArgument.encode());
+		return assembleEncodings(rdRegisterArgument.encode(),
+				rsRegisterArgument.encode(), rtRegisterArgument.encode());
 	}
 	
-	private int assembleEncodings(int encodedRSArgument, int encodedRTArgument)
+	private int assembleEncodings(int encodedRDArgument, int encodedRSArgument,
+			int encodedRTArgument)
 	{
-		
-		//Argument loRegisterArgument = new RegisterArgument("$LO");
-		
 		int encodedBitString = 0;
-		encodedBitString |= (opcode & MASK_6BIT) << OP_CODE_POSITION;
 		encodedBitString |= (encodedRSArgument & MASK_5BIT) << RS_POSITION;
 		encodedBitString |= (encodedRTArgument & MASK_5BIT) << RT_POSITION;
+		encodedBitString |= (encodedRDArgument & MASK_5BIT) << RD_POSITION;
+		encodedBitString |= (rValue & MASK_5BIT) << SHAMT_POSITION;
 		encodedBitString |= (functCode & MASK_6BIT) << FUNCT_CODE_POSITION;
 		
 		return encodedBitString;

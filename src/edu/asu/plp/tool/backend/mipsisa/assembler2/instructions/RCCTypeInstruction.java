@@ -8,9 +8,9 @@ import edu.asu.plp.tool.backend.mipsisa.assembler2.Argument;
 import edu.asu.plp.tool.backend.mipsisa.assembler2.arguments.ArgumentType;
 import edu.asu.plp.tool.backend.mipsisa.assembler2.arguments.RegisterArgument;
 
-public class AccRTypeInstruction extends AbstractInstruction
+public class RCCTypeInstruction extends AbstractInstruction
 {
-	//multu $rs, $rt
+	//mul $rd, $rs, $rt
 	
 	public static final int MASK_5BIT = 0b011111;
 	public static final int MASK_6BIT = 0b111111;
@@ -21,35 +21,35 @@ public class AccRTypeInstruction extends AbstractInstruction
 	public static final int SHAMT_POSITION = 6;
 	public static final int FUNCT_CODE_POSITION = 0;
 	
+	private int opCode;
 	private int functCode;
-	private int opcode;
 	
-	public AccRTypeInstruction(int opcode, int functCode)
+	public RCCTypeInstruction(int opCode, int functCode)
 	{
-		super(new ArgumentType[] { REGISTER, REGISTER });
+		super(new ArgumentType[] { REGISTER, REGISTER, REGISTER });
+		this.opCode = opCode;
 		this.functCode = functCode;
-		this.opcode = opcode;
 	}
 	
 	@Override
 	protected int safeAssemble(Argument[] arguments)
 	{
-		Argument rsRegisterArgument = arguments[0];
-		Argument rtRegisterArgument = arguments[1];
+		Argument rtRegisterArgument = arguments[2];
+		Argument rsRegisterArgument = arguments[1];
+		Argument rdRegisterArgument = arguments[0];
 		
-		return assembleEncodings(rsRegisterArgument.encode(), rtRegisterArgument.encode());
+		return assembleEncodings(rtRegisterArgument.encode(), rsRegisterArgument.encode(), rdRegisterArgument.encode());
 	}
 	
-	private int assembleEncodings(int encodedRSArgument, int encodedRTArgument)
+	private int assembleEncodings(int encodedRTArgument, int encodedRSArgument, int encodedRDArgument)
 	{
-		
-		//Argument loRegisterArgument = new RegisterArgument("$LO");
-		
 		int encodedBitString = 0;
-		encodedBitString |= (opcode & MASK_6BIT) << OP_CODE_POSITION;
+		encodedBitString |= (opCode & MASK_6BIT) << OP_CODE_POSITION;
 		encodedBitString |= (encodedRSArgument & MASK_5BIT) << RS_POSITION;
 		encodedBitString |= (encodedRTArgument & MASK_5BIT) << RT_POSITION;
+		encodedBitString |= (encodedRDArgument & MASK_5BIT) << RD_POSITION;
 		encodedBitString |= (functCode & MASK_6BIT) << FUNCT_CODE_POSITION;
+		System.out.println(encodedBitString);
 		
 		return encodedBitString;
 	}

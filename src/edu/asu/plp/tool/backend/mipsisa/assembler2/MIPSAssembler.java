@@ -106,6 +106,7 @@ public class MIPSAssembler implements Assembler
 		directiveMap = new HashMap<>();
 		
 		//TODO add directives http://students.cs.tamu.edu/tanzir/csce350/reference/assembler_dir.html
+		//MIPS/PLP Shared directives
 		directiveMap.put(".org", this::orgDirective);
 		directiveMap.put(".word", this::wordDirective);
 		directiveMap.put(".space", this::spaceDirective);
@@ -117,6 +118,11 @@ public class MIPSAssembler implements Assembler
 		directiveMap.put(".data", this::dataDirective);
 		directiveMap.put(".equ", this::equDirective);
 		
+		//--------------------------MIPS Directives---------------------------//
+		directiveMap.put(".align", this::alignDirective);
+		directiveMap.put(".extern", this::externDirective);
+		directiveMap.put(".globl", this::globlDirective);
+		directiveMap.put(".half", this::halfDirective);
 	}
 	
 	//TODO need to ask Sohoni which pseudo-ops he wants us to keep. 
@@ -128,6 +134,9 @@ public class MIPSAssembler implements Assembler
 		pseudoOperationMap.put("move", this::moveOperation);
 		pseudoOperationMap.put("li", this::liOperation);
 		pseudoOperationMap.put("la", this::laOperation);
+		pseudoOperationMap.put("bal", this::balOperation);
+		pseudoOperationMap.put("beqz", this::beqzOperation);
+		pseudoOperationMap.put("bnez", this::bnezOperation);
 		
 		//PLP Only (sponsor requested)
 		pseudoOperationMap.put("push", this::pushOperation);
@@ -169,17 +178,17 @@ public class MIPSAssembler implements Assembler
 		mipsInstructions.addRTypeInstruction("sltu", 0x2b);
 		//mipsInstructions.addRTypeInstruction("mullo", 0x10);
 		//mipsInstructions.addRTypeInstruction("mulhi", 0x11);
-		//REPLACED BY MULT
+		//REPLACED BY MULT, MUL, and MULTU
 
 		//changed these funcCodes
 		/*mipsInstructions.addRTypeInstruction("sllv", 0x01);
 		mipsInstructions.addRTypeInstruction("slrv", 0x03);*/
 		
 		mipsInstructions.addRTypeInstruction("sllv", 0x04);
-		mipsInstructions.addRTypeInstruction("srlv", 0x06);
+		mipsInstructions.addRVTypeInstruction("srlv", 0x06, 0);
 		
-		mipsInstructions.addRITypeInstruction("sll", 0x00);
-		mipsInstructions.addRITypeInstruction("srl", 0x02);
+		mipsInstructions.addRITypeInstruction("sll", 0x00, 0);
+		mipsInstructions.addRITypeInstruction("srl", 0x02, 0);
 
 		mipsInstructions.addJTypeInstruction("j", 0x02);
 		mipsInstructions.addJTypeInstruction("jal", 0x03);
@@ -197,11 +206,31 @@ public class MIPSAssembler implements Assembler
 		mipsInstructions.addRLTypeInstruction("lw", 0x23);
 		mipsInstructions.addRLTypeInstruction("sw", 0x2B);
 		
-		
 		mipsInstructions.addBTypeInstruction("bne", 0x05);
 		mipsInstructions.addBTypeInstruction("beq", 0x04);
 		
 		//MIPS ONLY
+		//Branch
+		mipsInstructions.addBRTypeInstruction("bgez", 0x01, 0x01);
+		mipsInstructions.addBRTypeInstruction("bgezal", 0x01, 0x11);
+		mipsInstructions.addBRTypeInstruction("bgtz", 0x07, 0x00);
+		mipsInstructions.addBRTypeInstruction("blez", 0x06, 0x00);
+		mipsInstructions.addBRTypeInstruction("bltz", 0x01, 0x00);
+		mipsInstructions.addBRTypeInstruction("bltzal", 0x01, 0x10);
+		
+		//Load/store
+		mipsInstructions.addRLTypeInstruction("lb", 0x20);
+		mipsInstructions.addRLTypeInstruction("lbu", 0x24);
+		mipsInstructions.addRLTypeInstruction("lh", 0x21);
+		mipsInstructions.addRLTypeInstruction("lhu", 0x25);
+		mipsInstructions.addRLTypeInstruction("lwl", 0x22);
+		mipsInstructions.addRLTypeInstruction("lwr", 0x26);
+		mipsInstructions.addRLTypeInstruction("sb", 0x28);
+		mipsInstructions.addRLTypeInstruction("sh", 0x29);
+		mipsInstructions.addRLTypeInstruction("swl", 0x2a);
+		mipsInstructions.addRLTypeInstruction("swr", 0x2e);
+		
+		
 		//LO and HI
 		mipsInstructions.addRMTypeInstruction("mflo", 0x12);
 		mipsInstructions.addRMTypeInstruction("mfhi", 0x10);
@@ -211,12 +240,34 @@ public class MIPSAssembler implements Assembler
 		//Opcode 0x1c
 		mipsInstructions.addRCTypeInstruction("clz", 0x1c, 0x20);
 		mipsInstructions.addRCTypeInstruction("clo", 0x1c, 0x21);
+		mipsInstructions.addAccRTypeInstruction("madd", 0x1c, 0x00);
+		mipsInstructions.addAccRTypeInstruction("maddu", 0x1c, 0x01);
+		mipsInstructions.addAccRTypeInstruction("msub", 0x1c, 0x04);
+		mipsInstructions.addAccRTypeInstruction("msubu", 0x1c, 0x05);
 		
 		mipsInstructions.addRTypeInstruction("add", 0x20);
-		mipsInstructions.addAccRTypeInstruction("multu", 0x19);
-		mipsInstructions.addAccRTypeInstruction("divu", 0x1B);
+		mipsInstructions.addITypeInstruction("addi", 0x08);
+		mipsInstructions.addRTypeInstruction("sub", 0x22);
+		mipsInstructions.addRCCTypeInstruction("mul", 0x1c, 0x02);
+		mipsInstructions.addAccRTypeInstruction("mult", 0x00, 0x18);
+		mipsInstructions.addAccRTypeInstruction("multu", 0x00, 0x19);
+		mipsInstructions.addAccRTypeInstruction("div", 0x00, 0x1A);
+		mipsInstructions.addAccRTypeInstruction("divu", 0x00, 0x1B);
 		mipsInstructions.addRTypeInstruction("xor", 0x26);
 		mipsInstructions.addITypeInstruction("xori", 0x0e);
+		
+		mipsInstructions.addRITypeInstruction("rotr", 0x02, 1);
+		mipsInstructions.addRVTypeInstruction("rotrv", 0x06, 1);
+		mipsInstructions.addRITypeInstruction("sra", 0x03, 0);
+		mipsInstructions.addRVTypeInstruction("srav", 0x07, 0);
+		mipsInstructions.addRCTypeInstruction("seh", 0x1f, 0x18);
+		mipsInstructions.addRCTypeInstruction("seb", 0x1f, 0x10);
+		mipsInstructions.addRCTypeInstruction("wsbh", 0x1f, 0x20);
+		mipsInstructions.addRIBTypeInstruction("ins", 0x1f, 0x04);
+		mipsInstructions.addRIBTypeInstruction("ext", 0x1f, 0x00);
+		mipsInstructions.addRTypeInstruction("movz", 0x0a);
+		mipsInstructions.addRTypeInstruction("movn", 0x0b);
+		
 		
 	}
 	
@@ -236,6 +287,7 @@ public class MIPSAssembler implements Assembler
 			currentFile = asmFile;
 			preprocessFile(asmFile.getContent(), asmFile);
 		}
+		
 		
 		programLocation = 0;
 		lstInstEncodings = new ArrayList<>();
@@ -308,8 +360,6 @@ public class MIPSAssembler implements Assembler
 		}
 	}
 	
-	
-	
 	private void assembleFile(String content, String asmFileName) throws AssemblerException
 	{
 		String[] lines = content.split("\\n\\r?");
@@ -371,7 +421,7 @@ public class MIPSAssembler implements Assembler
 						String[] argumentStrings = remainder.split(",\\s*");
 						
 						Argument[] arguments = parseArguments(argumentStrings);
-						
+					
 						MIPSDisassembly disassembly = process(subInstruction, arguments);
 						ASMInstruction key = new MIPSAssemblyInstruction(lineNumber, subSource, asmFileName);
 						assemblyToDisassemblyMap.put(key, disassembly);
@@ -730,6 +780,96 @@ public class MIPSAssembler implements Assembler
 		return "beq $0, $0, " + currentToken.getValue();
 	}
 	
+	/**
+	 * Branch and link always to label
+	 * 
+	 * bal label
+	 * 
+	 * equivalent to: bgezal $0, label
+	 * 
+	 * @throws AssemblerException
+	 */
+	private String balOperation() throws AssemblerException
+	{
+		expectedNextToken("It needs a target label");
+		
+		ensureTokenEquality("Expected a target label to branch", MIPSTokenType.LABEL_PLAIN);
+		
+		addRegionAndIncrementAddress();//Steps through program
+		return "bgezal $0, " + currentToken.getValue();
+	}
+	
+	/**
+	 * Branch if equal to 0
+	 * 
+	 * Branches when the given register value is equal to 0.
+	 * 
+	 * <p>
+	 * beqz $rs, label
+	 * </p>
+	 * 
+	 * <p>
+	 * equivalent to: beq $0, $rs, label
+	 * </p>
+	 * 
+	 * @throws AssemblerException
+	 */
+	private String beqzOperation() throws AssemblerException
+	{
+		String preprocessedInstructions = "";
+		expectedNextToken("It needs register and an address which needs branched to");
+		String targetRegister = currentToken.getValue();
+		ensureTokenEquality("Expected a destination register", MIPSTokenType.ADDRESS);
+		
+		expectedNextToken("It needs a comma followed by value which is the label we'll branch to if 0 = register " + targetRegister);
+		ensureTokenEquality("Expected a comma after " + targetRegister,
+				MIPSTokenType.COMMA);
+		
+		expectedNextToken("It needs a comma followed by an address which needs to be loaded to register " + targetRegister);
+		String label = currentToken.getValue();
+		ensureTokenEquality("Expected an immediate value or label", MIPSTokenType.NUMERIC, MIPSTokenType.LABEL_PLAIN);
+		
+		
+		preprocessedInstructions = "beq $0, " + targetRegister + ", " + label;
+		addRegionAndIncrementAddress();
+		return preprocessedInstructions;
+	}
+	
+	/**
+	 * Branch if not equal to 0
+	 * 
+	 * Branches when the given register value is anything except 0.
+	 * 
+	 * <p>
+	 * bnez $rs, label
+	 * </p>
+	 * 
+	 * <p>
+	 * equivalent to: bne $0, $rs, label
+	 * </p>
+	 * 
+	 * @throws AssemblerException
+	 */
+	private String bnezOperation() throws AssemblerException
+	{
+		String preprocessedInstructions = "";
+		expectedNextToken("It needs register and an address which needs to be loaded");
+		String targetRegister = currentToken.getValue();
+		ensureTokenEquality("Expected a destination register", MIPSTokenType.ADDRESS);
+		
+		expectedNextToken("It needs a comma followed by value which needs to be loaded to register " + targetRegister);
+		ensureTokenEquality("Expected a comma after " + targetRegister,
+				MIPSTokenType.COMMA);
+		
+		expectedNextToken("It needs a comma followed by an address which needs to be loaded to register " + targetRegister);
+		String label = currentToken.getValue();
+		ensureTokenEquality("Expected an immediate value or label", MIPSTokenType.NUMERIC, MIPSTokenType.LABEL_PLAIN);
+		
+		
+		preprocessedInstructions = String.format("bne $0, %s, %s", targetRegister, label);
+		addRegionAndIncrementAddress();
+		return preprocessedInstructions;
+	}
 	
 	/**
 	 * Copy Register. Copy $rs to $rd
@@ -759,26 +899,6 @@ public class MIPSAssembler implements Assembler
 		
 		addRegionAndIncrementAddress();
 		return "or " + destinationRegister + ", $0," + startingRegister;
-	}
-	
-	
-	/**
-	 * Copy Register. Copy $lo to $rd
-	 * 
-	 * mflo $rd
-	 * 
-	 * equivalent to: or $rd, $0, $lo 
-	 * 
-	 * @throws AssemblerException
-	 */
-	private String mfloOperation() throws AssemblerException
-	{
-		expectedNextToken("It needs a to register");
-		String destinationRegister = currentToken.getValue();
-		ensureTokenEquality("Expected a destination register", MIPSTokenType.ADDRESS);
-		
-		addRegionAndIncrementAddress();
-		return "addu " + destinationRegister + ", $0, " + "$lo";
 	}
 	
 	
@@ -1164,6 +1284,8 @@ public class MIPSAssembler implements Assembler
 	{
 		
 		Token directiveToken = currentToken;
+		//System.out.println("This is " + directiveToken);
+		
 		boolean wordAligned = directiveToken.getValue().equals(".asciiw");
 		StringBuilder preInstruction = new StringBuilder();
 		preInstruction.append("");
@@ -1406,6 +1528,54 @@ public class MIPSAssembler implements Assembler
 		return "";
 	}
 	
+	
+	
+	//------------------------------MIPS Directives-------------------------------------//
+	private String alignDirective() throws AssemblerException
+	{
+		
+		Token directiveToken = currentToken;
+		
+		expectedNextToken("expected an alignment size");
+		alignSize(currentToken);
+		
+		ensureTokenEquality("Expected an alignment size", MIPSTokenType.NUMERIC);
+		return "";
+	}
+	
+	//Research C definition of extern 
+	private String externDirective() throws AssemblerException
+	{
+		Token directiveToken = currentToken;
+		System.out.println("This is " + directiveToken);
+		
+		expectedNextToken("it needs globally defined data label to reference");
+		ensureTokenEquality("Expected an glodal data reference label", MIPSTokenType.DIRECTIVE);
+		
+		return "";
+	}
+	
+	//Research C definitions of global
+	private String globlDirective() throws AssemblerException
+	{
+		Token directiveToken = currentToken;
+		System.out.println("This is " + directiveToken);
+		
+		expectedNextToken("it a needs label to define as a global reference");
+		ensureTokenEquality("Expected a label to set as global reference", MIPSTokenType.DIRECTIVE);
+		return "";
+	}
+	
+	private String halfDirective() throws AssemblerException
+	{
+		Token directiveToken = currentToken;
+		System.out.println("This is " + directiveToken);
+		
+		expectedNextToken("it needs 16 bit quantities to store");
+		ensureTokenEquality("Expected n number of 16 bit quantities, separated by commas", MIPSTokenType.DIRECTIVE);
+		return "";
+	}
+	
 	private String preprocessNormalInstruction() throws AssemblerException
 	{
 		String preprocessedInstruction = "";
@@ -1451,6 +1621,16 @@ public class MIPSAssembler implements Assembler
 						ensureArgumentEquality(strInstruction, lstArguments[2]);
 							
 						preprocessedInstruction += (" " + currentToken.getValue());
+						
+						if(lstArguments.length > 3)
+						{
+							expectedNextToken("");
+							ensureTokenEquality("Expected a comma after " + strSecondArgument, MIPSTokenType.COMMA);
+								
+							expectedNextToken("");
+							ensureArgumentEquality(strInstruction, lstArguments[2]);
+								
+						}
 					}
 				}
 			}
@@ -1533,7 +1713,7 @@ public class MIPSAssembler implements Assembler
 	
 	private void ensureTokenEquality(String message, MIPSTokenType compareTo) throws AssemblerException
 	{
-		String sMessage = message + "Got token type - " + currentToken.getValue();
+		String sMessage = message + " Got token type - " + currentToken.getValue();
 		
 		if (compareTo.equals(MIPSTokenType.INSTRUCTION))
 		{
@@ -1702,6 +1882,47 @@ public class MIPSAssembler implements Assembler
 			return false;
 	}
 	
+	//------part of .align directive-----//
+	private void alignSize(Token Token) {
+		int transform = 0;
+		String paramInt = Token.getValue();
+		System.out.println("param is " + paramInt + " length " + paramInt.length());
+		
+		if(checkNonDecimal(paramInt)){
+			if(paramInt.charAt(1) == 'x')
+				transform = Integer.parseInt(paramInt.substring(2), 16); 	//converts hex string to decimal integer
+			
+			else if(paramInt.charAt(1) == 'b')
+				transform = Integer.parseInt(paramInt.substring(2), 2);		//converts binary string to decimal integer
+			
+			else//TODO: make this go to PLP console
+				System.out.println("Not a valid alignment");
+		}
+		
+		if(paramInt.compareTo("2") == 0 || transform == 2)
+			System.out.println("Align size 4");
+	
+		else if(paramInt.compareTo("3") == 0 || transform == 3)
+			System.out.println("Align size 8");
+	
+		else if (paramInt.compareTo("4") == 0 || transform == 4)
+			System.out.println("Align size 16");
+		
+		
+		else//TODO: make this go to PLP console
+			System.out.println("Not an appropriate alignment");
+	}
+	private boolean checkNonDecimal(String paramInt) {
+		boolean result = false;
+		if(paramInt.length() == 1)
+			return result;
+		
+		if(paramInt.charAt(1) == 'x' || paramInt.charAt(1) == 'b')
+			result = true;
+		
+		return result;
+	}
+
 	private void addRegionAndIncrementAddress(int timesToAddCurrentRegion,
 			int currentAddressIncrementSize)
 	{

@@ -10,10 +10,14 @@ import edu.asu.plp.tool.backend.mipsisa.assembler2.instructions.RJTypeInstructio
 import edu.asu.plp.tool.backend.mipsisa.assembler2.instructions.RLTypeInstruction;
 import edu.asu.plp.tool.backend.mipsisa.assembler2.instructions.RMTypeInstruction;
 import edu.asu.plp.tool.backend.mipsisa.assembler2.instructions.RTypeInstruction;
+import edu.asu.plp.tool.backend.mipsisa.assembler2.instructions.RVTypeInstruction;
 import edu.asu.plp.tool.backend.mipsisa.assembler2.instructions.AccRTypeInstruction;
+import edu.asu.plp.tool.backend.mipsisa.assembler2.instructions.BRTypeInstruction;
 import edu.asu.plp.tool.backend.mipsisa.assembler2.instructions.BTypeInstruction;
 import edu.asu.plp.tool.backend.mipsisa.assembler2.instructions.JTypeInstruction;
+import edu.asu.plp.tool.backend.mipsisa.assembler2.instructions.RCCTypeInstruction;
 import edu.asu.plp.tool.backend.mipsisa.assembler2.instructions.RCTypeInstruction;
+import edu.asu.plp.tool.backend.mipsisa.assembler2.instructions.RIBTypeInstruction;
 
 public class InstructionMap extends HashMap<String, MIPSInstruction>
 {
@@ -23,9 +27,9 @@ public class InstructionMap extends HashMap<String, MIPSInstruction>
 		this.put(name, instruction);
 	}
 	
-	public void addRITypeInstruction(String name, int functCode)
+	public void addRITypeInstruction(String name, int functCode, int r_value)
 	{
-		RITypeInstruction instruction = new RITypeInstruction(functCode);
+		RITypeInstruction instruction = new RITypeInstruction(functCode, r_value);
 		this.put(name, instruction);
 	}
 	
@@ -35,9 +39,9 @@ public class InstructionMap extends HashMap<String, MIPSInstruction>
 		this.put(name, instruction);
 	}
 	
-	public void addAccRTypeInstruction(String name, int functCode)
+	public void addAccRTypeInstruction(String name, int opcode, int functCode)
 	{
-		AccRTypeInstruction instruction = new AccRTypeInstruction(functCode);
+		AccRTypeInstruction instruction = new AccRTypeInstruction(opcode, functCode);
 		this.put(name, instruction);
 	}
 	
@@ -77,15 +81,38 @@ public class InstructionMap extends HashMap<String, MIPSInstruction>
 		this.put(name, instruction);
 	}
 	
+	public void addRVTypeInstruction(String name, int functCode, int r_value) {
+		RVTypeInstruction instruction = new RVTypeInstruction(functCode, r_value);
+		this.put(name, instruction);
+	}
+	
 	public void addRCTypeInstruction(String name, int opCode, int functCode)
 	{
 		RCTypeInstruction instruction = new RCTypeInstruction(opCode, functCode);
 		this.put(name, instruction);
 	}
 	
+	public void addRCCTypeInstruction(String name, int opCode, int functCode)
+	{
+		RCCTypeInstruction instruction = new RCCTypeInstruction(opCode, functCode);
+		this.put(name, instruction);
+	}
+	
+	public void addRIBTypeInstruction(String name, int opCode, int functCode)
+	{
+		RIBTypeInstruction instruction = new RIBTypeInstruction(opCode, functCode);
+		this.put(name, instruction);
+	}
+	
 	public void addJRRTypeInstruction(String name, int opCode)
 	{
 		JRRTypeInstruction instruction = new JRRTypeInstruction(opCode);
+		this.put(name, instruction);
+	}
+	
+	public void addBRTypeInstruction(String name, int opCode, int branchCode)
+	{
+		BRTypeInstruction instruction = new BRTypeInstruction(opCode, branchCode);
 		this.put(name, instruction);
 	}
 	
